@@ -5,8 +5,95 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PZ2"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="600" Width="900">
     <Grid>
-        
+        <Grid.RowDefinitions>
+            <RowDefinition x:Name="gr1" Height="30"/>
+            <RowDefinition x:Name="gr2" Height="*"  />
+        </Grid.RowDefinitions>
+        <Viewport3D x:Name="ViewPort"  
+         ClipToBounds="True"
+         MouseDown="ViewPort_MouseDown"
+         MouseLeftButtonDown="ViewPort_MouseLeftButtonDown"
+         MouseMove="ViewPort_MouseMove"
+         MouseUp="ViewPort_MouseUp"
+         MouseWheel="ViewPort_MouseWheel" Grid.Row="1">
+
+            <Viewport3D.Camera>
+                <PerspectiveCamera x:Name="Camera" Position = "1 -800 1000" LookDirection = "0,3.5,-5" FieldOfView = "60"  >
+                    <PerspectiveCamera.Transform>
+                        <Transform3DGroup>
+                            <TranslateTransform3D
+                             x:Name="translacija"
+                             OffsetX="0"
+                             OffsetY="0"
+                             OffsetZ="0" />
+                            <ScaleTransform3D
+                             ScaleX="1"
+                             ScaleY="1"
+                             ScaleZ="1" />
+                            <RotateTransform3D
+                             CenterX="0"
+                             CenterY="0"
+                             CenterZ="0" />
+                        </Transform3DGroup>
+                    </PerspectiveCamera.Transform>
+                </PerspectiveCamera>
+            </Viewport3D.Camera>
+            <ModelVisual3D x:Name="Light">
+                <ModelVisual3D.Content>
+                    <DirectionalLight x:Name = "LightDir"  Direction = "1, 1, -10"/>
+                </ModelVisual3D.Content>
+            </ModelVisual3D>
+
+            <ModelVisual3D>
+                <ModelVisual3D.Content>
+                    <Model3DGroup x:Name="model3dGroup">
+
+                        <GeometryModel3D >
+                            <GeometryModel3D.Geometry>
+                                <MeshGeometry3D Positions = "-587.5,-387.5,0    -587.5,387.5,0    587.5,-387.5,0    587.5,387.5,0" TriangleIndices = "0,2,1 1,2,3"  TextureCoordinates="0,1 0,0 1,1 1,0" />
+                            </GeometryModel3D.Geometry>
+
+                            <GeometryModel3D.Material>
+                                <DiffuseMaterial>
+                                    <DiffuseMaterial.Brush>
+                                        <ImageBrush ImageSource="/map.jpg" />
+                                    </DiffuseMaterial.Brush>
+                                </DiffuseMaterial>
+                            </GeometryModel3D.Material>
+
+
+                        </GeometryModel3D>
+
+                    </Model3DGroup>
+                </ModelVisual3D.Content>
+                <ModelVisual3D.Transform>
+                    <Transform3DGroup>
+                        <ScaleTransform3D
+                         x:Name="skaliranje"
+                         ScaleX="1"
+                         ScaleY="1"
+                         ScaleZ="1" />
+                        <RotateTransform3D
+                         CenterX="300"
+                         CenterY="150"
+                         CenterZ="0">
+                            <RotateTransform3D.Rotation>
+                                <AxisAngleRotation3D x:Name="rotateY" Axis="0,1,0" />
+                            </RotateTransform3D.Rotation>
+                        </RotateTransform3D>
+                        <RotateTransform3D
+                         CenterX="300"
+                         CenterY="150"
+                         CenterZ="0">
+                            <RotateTransform3D.Rotation>
+                                <AxisAngleRotation3D x:Name="rotateX" Axis="1,0,0" />
+                            </RotateTransform3D.Rotation>
+                        </RotateTransform3D>
+                    </Transform3DGroup>
+                </ModelVisual3D.Transform>
+            </ModelVisual3D>
+        </Viewport3D>
     </Grid>
 </Window>
