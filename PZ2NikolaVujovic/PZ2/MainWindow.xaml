@@ -8,16 +8,27 @@
         Title="MainWindow" Height="600" Width="900" Name="window">
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition x:Name="gr1" Height="30"/>
+            <RowDefinition x:Name="gr1" Height="50"/>
             <RowDefinition x:Name="gr2" Height="*"  />
         </Grid.RowDefinitions>
+        <StackPanel Grid.Row="0" Orientation="Horizontal">
+            <CheckBox Content="Sakrij neaktivan deo mreze" HorizontalAlignment="Left" VerticalAlignment="Center" Checked="CheckBox_Checked" Unchecked="CheckBox_Unchecked"/>
+            <CheckBox Content="Promena boje sviceva" HorizontalAlignment="Left" VerticalAlignment="Center" Checked="CheckBox_Checked_1" Unchecked="CheckBox_Unchecked_1"/>
+            <CheckBox Content="Promena boje vodova" HorizontalAlignment="Left" VerticalAlignment="Center" Checked="CheckBox_Checked_2" Unchecked="CheckBox_Unchecked_2"/>
+            <StackPanel Orientation="Vertical" Margin="40,0,0,0">
+                <CheckBox Content="0-1" HorizontalAlignment="Left" VerticalAlignment="Center" Checked="CheckBox_Checked_3" Unchecked="CheckBox_Unchecked_3"/>
+                <CheckBox Content="1-2" HorizontalAlignment="Left" VerticalAlignment="Center" Checked="CheckBox_Checked_4" Unchecked="CheckBox_Unchecked_4"/>
+                <CheckBox Content="2+" HorizontalAlignment="Left" VerticalAlignment="Center" Checked="CheckBox_Checked_5" Unchecked="CheckBox_Unchecked_5"/>
+            </StackPanel>
+        </StackPanel>
+
         <Viewport3D x:Name="ViewPort"  
          ClipToBounds="True"
-         MouseDown="ViewPort_MouseDown"
          MouseLeftButtonDown="ViewPort_MouseLeftButtonDown"
-         MouseMove="ViewPort_MouseMove"
          MouseUp="ViewPort_MouseUp"
-         MouseWheel="ViewPort_MouseWheel" Grid.Row="1">
+         MouseWheel="ViewPort_MouseWheel" Grid.Row="1"
+         MouseMove="ViewPort_MouseMove"
+                    >
 
             <Viewport3D.Camera>
                 <PerspectiveCamera x:Name="Camera" Position = "1 -800 1000" LookDirection = "0,3.5,-5" FieldOfView = "60"  >
