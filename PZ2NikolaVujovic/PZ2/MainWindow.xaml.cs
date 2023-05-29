@@ -46,6 +46,8 @@ namespace PZ2
         public List<NodeEntity> nodes = new List<NodeEntity>();
         public List<SwitchEntity> switches = new List<SwitchEntity>();
         public List<LineEntity> lines = new List<LineEntity>();
+        ToolTip toolTip = new ToolTip();
+
         public MainWindow()
         {
             InitializeComponent();
@@ -446,27 +448,168 @@ namespace PZ2
 
         private void ViewPort_MouseDown(object sender, MouseButtonEventArgs e)
         {
+            if (e.ChangedButton == MouseButton.Middle && e.ButtonState == MouseButtonState.Pressed)
+            {
+                rotate = true;
+                startPoint = e.GetPosition(this);
+                ViewPort.CaptureMouse();
+            }
 
+            if (e.ChangedButton == MouseButton.Left && e.ButtonState == MouseButtonState.Pressed)
+            {
+                var mouseposition = e.GetPosition(ViewPort);
+                var testpoint3D = new Point3D(mouseposition.X, mouseposition.Y, 0);
+                var testdirection = new Vector3D(mouseposition.X, mouseposition.Y, 10);
+
+                var pointparams = new PointHitTestParameters(mouseposition);
+                var rayparams = new RayHitTestParameters(testpoint3D, testdirection);
+                System.Windows.Point mousePosition = new System.Windows.Point();
+                mousePosition = e.GetPosition(window);
+                VisualTreeHelper.HitTest(ViewPort, null, HTResult, pointparams);
+            }
         }
-
+        private System.Windows.Point startPoint = new System.Windows.Point();
+        private System.Windows.Point offset = new System.Windows.Point();
+        private bool translate = false;
+        private bool rotate = false;
+        private GeometryModel3D hitgeo;
+        private GeometryModel3D previousFirstModel;
+        private GeometryModel3D previousSecondModel;
         private void ViewPort_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
+            translate = true;
 
+            ViewPort.CaptureMouse();
+            startPoint = e.GetPosition(this);
+            offset.X = translacija.OffsetX;
+            offset.Y = translacija.OffsetY;
         }
-
-        private void ViewPort_MouseMove(object sender, MouseEventArgs e)
+        private HitTestResultBehavior HTResult(System.Windows.Media.HitTestResult rawresult)
         {
 
+            if (!(rawresult is RayHitTestResult rayResult))
+                return HitTestResultBehavior.Stop;
+            var tag = rayResult.ModelHit?.GetValue(TagProperty);
+            if (!(tag is PowerEntity powerEntity))
+                return HitTestResultBehavior.Stop;
+            bool gasit = elementi.Keys.Any(model => model == rayResult.ModelHit);
+            if (gasit)
+            {
+                hitgeo = rayResult.ModelHit as GeometryModel3D;
+                var entity = elementi[hitgeo];
+
+                toolTip = new ToolTip
+                {
+                    Content = $"ID: {entity.Id}\nName: {entity.Name}\nType: {entity.GetType().Name}",
+                    Height = 80,
+                    IsOpen = true
+                };
+                ToolTipService.SetPlacement(ViewPort, System.Windows.Controls.Primitives.PlacementMode.Mouse);
+            }
+            else
+            {
+                hitgeo = null;
+            }
+
+            if (tag is LineEntity line)
+            {
+                ReturnToPreviousColors();
+
+                var first = model3dGroup.Children.OfType<GeometryModel3D>().FirstOrDefault(linija => (linija.GetValue(TagProperty) as PowerEntity)?.Id == line.FirstEnd);
+                var second = model3dGroup.Children.OfType<GeometryModel3D>().FirstOrDefault(linija => (linija.GetValue(TagProperty) as PowerEntity)?.Id == line.SecondEnd);
+
+                previousFirstModel = first;
+                previousSecondModel = second;
+
+                if (first != null)
+                    first.Material = new DiffuseMaterial(Brushes.Yellow);
+                if (second != null)
+                    second.Material = new DiffuseMaterial(Brushes.Yellow);
+
+                toolTip = new ToolTip
+                {
+                    Content = $"ID: {line.Id}\nName: {line.Name}\nType: {line.GetType().Name}",
+                    Height = 80,
+                    IsOpen = true
+                };
+                ToolTipService.SetPlacement(ViewPort, System.Windows.Controls.Primitives.PlacementMode.Mouse);
+            }
+            return HitTestResultBehavior.Stop;
+
         }
+        private void ReturnToPreviousColors()
+        {
+            ReturToModelToMaterial(previousFirstModel);
+            ReturToModelToMaterial(previousSecondModel);
+        }
+        private void ReturToModelToMaterial(GeometryModel3D model3D)
+        {
+            if (model3D?.GetValue(TagProperty) is SubstationEntity)
+            {
+                model3D.Material = new DiffuseMaterial(Brushes.Green);
+            }
+            if (model3D?.GetValue(TagProperty) is NodeEntity)
+            {
+                model3D.Material = new DiffuseMaterial(Brushes.Blue);
+            }
+            if (model3D?.GetValue(TagProperty) is SwitchEntity)
+            {
+                model3D.Material = new DiffuseMaterial(Brushes.Red);
+            }
+        }
+        private void ViewPort_MouseMove(object sender, MouseEventArgs e)
+        {
+            var end = e.GetPosition(this);
+            var offsetX = startPoint.X - end.X;
+            var offsetY = startPoint.Y - end.Y;
+            var translateX = (offsetX * 100) / Width;
+            var translateY = -(offsetY * 100) / Height;
+
+            if (ViewPort.IsMouseCaptured)
+            {
+                if (translate)
+                {
+                    translacija.OffsetX = offset.X + (translateX / (100 * skaliranje.ScaleX)) * 1000;
+                    translacija.OffsetY = offset.Y + (translateY / (100 * skaliranje.ScaleY)) * 1000;
+                }
+                if (rotate)
+                {
+                    var angleX = (rotateX.Angle + translateY) % 360;
+                    rotateY.Angle = (rotateY.Angle + -translateX) % 360;
+                    if (-65 < angleX && angleX < 65)
+                    {
+                        rotateX.Angle = angleX;
+                    }
+                    startPoint = end;
+                }
+            }
+        }
+
+
+
+
 
         private void ViewPort_MouseUp(object sender, MouseButtonEventArgs e)
         {
-
+            rotate = false;
+            translate = false;
+            ViewPort.ReleaseMouseCapture();
         }
-
+        private int zoom = 20;
         private void ViewPort_MouseWheel(object sender, MouseWheelEventArgs e)
         {
+            var p = PointFromScreen(e.GetPosition(window));
+            skaliranje.CenterX = p.X;
+            skaliranje.CenterY = p.Y;
+            skaliranje.CenterZ = 0;
 
+            if ((e.Delta > 0 && zoom < 60) || (e.Delta <= 0 && zoom > -60))
+            {
+                zoom += e.Delta > 0 ? 1 : -1;
+                skaliranje.ScaleX += e.Delta > 0 ? 0.1 : -0.1;
+                skaliranje.ScaleY += e.Delta > 0 ? 0.1 : -0.1;
+                skaliranje.ScaleZ += e.Delta > 0 ? 0.1 : -0.1;
+            }
         }
         public static void ToLatLon(double utmX, double utmY, int zoneUTM, out double latitude, out double longitude)
         {
